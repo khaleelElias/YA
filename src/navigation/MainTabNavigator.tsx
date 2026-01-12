@@ -6,7 +6,7 @@ import type { MainTabParamList } from './types';
 import { colors, typography } from '@/theme';
 
 // Import screens
-import HomeScreen from '@/screens/home/HomeScreen';
+import BrowseStackNavigator from './BrowseStackNavigator';
 import SearchScreen from '@/screens/search/SearchScreen';
 import DownloadsScreen from '@/screens/downloads/DownloadsScreen';
 import ProfileScreen from '@/screens/profile/ProfileScreen';
@@ -38,7 +38,7 @@ export default function MainTabNavigator() {
     >
       <Tab.Screen
         name="Browse"
-        component={HomeScreen}
+        component={BrowseStackNavigator}
         options={{
           title: 'Browse',
           tabBarIcon: ({ color, size }) => (

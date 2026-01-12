@@ -1,12 +1,38 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { MainTabScreenProps } from '@/navigation/types';
+import { BrowseStackScreenProps } from '@/navigation/types';
 import { colors, typography, spacing, layout, shadows } from '@/theme';
+import { useBooks, useCategories } from '@/hooks/useBooks';
+import type { Book } from '@/types';
 
-type Props = MainTabScreenProps<'Browse'>;
+type Props = BrowseStackScreenProps<'BrowseHome'>;
+
+// Color palette for book covers (when no cover image)
+const BOOK_COLORS = [
+  '#6366F1', '#EC4899', '#8B5CF6', '#F59E0B',
+  '#10B981', '#3B82F6', '#EF4444', '#14B8A6',
+];
 
 export default function HomeScreen({ navigation }: Props) {
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const { books, loading, error, total, refetch } = useBooks({
+    category: selectedCategory,
+    search: searchQuery || undefined,
+  });
+
+  const { categories } = useCategories();
+
+  const handleCategorySelect = (category: string | undefined) => {
+    setSelectedCategory(category);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
   return (
     <View style={styles.container}>
       {/* Search Bar */}
@@ -17,6 +43,8 @@ export default function HomeScreen({ navigation }: Props) {
             style={styles.searchInput}
             placeholder="Search books..."
             placeholderTextColor={colors.text.tertiary}
+            value={searchQuery}
+            onChangeText={handleSearch}
           />
         </View>
       </View>
@@ -25,6 +53,13 @@ export default function HomeScreen({ navigation }: Props) {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={refetch}
+            tintColor={colors.primary}
+          />
+        }
       >
         {/* Category Filter Pills */}
         <ScrollView
@@ -33,20 +68,26 @@ export default function HomeScreen({ navigation }: Props) {
           style={styles.filterSection}
           contentContainerStyle={styles.filterContent}
         >
-          <CategoryPill label="All Books" active />
-          <CategoryPill label="My Religion" />
-          <CategoryPill label="History" />
-          <CategoryPill label="Holidays" />
-          <CategoryPill label="Values & Morals" />
-          <CategoryPill label="Traditions" />
-          <CategoryPill label="Prayers" />
-          <CategoryPill label="Qewlên" />
-          <CategoryPill label="Stories" />
+          <CategoryPill
+            label="All Books"
+            active={selectedCategory === undefined}
+            onPress={() => handleCategorySelect(undefined)}
+          />
+          {categories.map((cat) => (
+            <CategoryPill
+              key={cat.category}
+              label={`${cat.category} (${cat.count})`}
+              active={selectedCategory === cat.category}
+              onPress={() => handleCategorySelect(cat.category)}
+            />
+          ))}
         </ScrollView>
 
         {/* Book Count */}
         <View style={styles.headerSection}>
-          <Text style={styles.bookCount}>20 books</Text>
+          <Text style={styles.bookCount}>
+            {loading ? 'Loading...' : `${total} book${total !== 1 ? 's' : ''}`}
+          </Text>
           <View style={styles.viewToggle}>
             <Pressable style={styles.viewButton}>
               <Ionicons name="list" size={20} color={colors.text.tertiary} />
@@ -57,60 +98,69 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         </View>
 
+        {/* Loading State */}
+        {loading && books.length === 0 && (
+          <View style={styles.centerContent}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={styles.loadingText}>Loading books...</Text>
+          </View>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <View style={styles.centerContent}>
+            <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+            <Text style={styles.errorText}>{error}</Text>
+            <Pressable style={styles.retryButton} onPress={refetch}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && books.length === 0 && (
+          <View style={styles.centerContent}>
+            <Ionicons name="book-outline" size={48} color={colors.text.tertiary} />
+            <Text style={styles.emptyText}>No books found</Text>
+            <Text style={styles.emptySubtext}>
+              {searchQuery ? 'Try a different search term' : 'Check back later for new books'}
+            </Text>
+          </View>
+        )}
+
         {/* Books Grid */}
-        <View style={styles.booksGrid}>
-          <BookCard
-            title="Yazidi Stories for Children"
-            author="Lewis Carroll"
-            category="Stories"
-            color="#6366F1"
-            isFavorite={false}
-          />
-          <BookCard
-            title="Tales of Courage"
-            author="Traditional"
-            category="Folk Tales"
-            color="#EC4899"
-            isFavorite={true}
-          />
-          <BookCard
-            title="Morning Prayers"
-            author="Religious Texts"
-            category="Prayers"
-            color="#8B5CF6"
-            isFavorite={false}
-          />
-          <BookCard
-            title="Yazidi Heritage"
-            author="Various Authors"
-            category="History"
-            color="#F59E0B"
-            isFavorite={false}
-          />
-          <BookCard
-            title="Children's Wisdom"
-            author="Khalil Gibran"
-            category="Values & Morals"
-            color="#10B981"
-            isFavorite={false}
-          />
-          <BookCard
-            title="Festival Guide"
-            author="Community Edition"
-            category="Holidays"
-            color="#3B82F6"
-            isFavorite={false}
-          />
-        </View>
+        {!loading && !error && books.length > 0 && (
+          <View style={styles.booksGrid}>
+            {books.map((book, index) => (
+              <BookCard
+                key={book.id}
+                book={book}
+                color={BOOK_COLORS[index % BOOK_COLORS.length]}
+                onPress={() => {
+                  navigation.navigate('BookDetail', { bookId: book.id });
+                }}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
 }
 
-function CategoryPill({ label, active = false }: { label: string; active?: boolean }) {
+function CategoryPill({
+  label,
+  active = false,
+  onPress,
+}: {
+  label: string;
+  active?: boolean;
+  onPress: () => void;
+}) {
   return (
     <Pressable
       style={[styles.categoryPill, active && styles.categoryPillActive]}
+      onPress={onPress}
     >
       <Text style={[styles.categoryPillText, active && styles.categoryPillTextActive]}>
         {label}
@@ -120,33 +170,39 @@ function CategoryPill({ label, active = false }: { label: string; active?: boole
 }
 
 function BookCard({
-  title,
-  author,
-  category,
+  book,
   color,
-  isFavorite,
+  onPress,
 }: {
-  title: string;
-  author: string;
-  category: string;
+  book: Book;
   color: string;
-  isFavorite: boolean;
+  onPress: () => void;
 }) {
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  const toggleFavorite = (e: any) => {
+    e.stopPropagation(); // Prevent triggering parent onPress
+    setIsFavorite(!isFavorite);
+    // TODO: Save to favorites
+  };
+
   return (
-    <Pressable style={styles.bookCard}>
+    <Pressable style={styles.bookCard} onPress={onPress}>
       {/* Book Cover */}
       <View style={[styles.bookCover, { backgroundColor: color }]}>
         <View style={styles.bookCoverContent}>
           <Text style={styles.bookCoverTitle} numberOfLines={3}>
-            {title}
+            {book.title}
           </Text>
         </View>
         {/* EPUB Badge */}
-        <View style={styles.epubBadge}>
-          <Text style={styles.epubBadgeText}>EPUB</Text>
-        </View>
+        {book.content_type === 'epub' && (
+          <View style={styles.epubBadge}>
+            <Text style={styles.epubBadgeText}>EPUB</Text>
+          </View>
+        )}
         {/* Favorite Button */}
-        <Pressable style={styles.favoriteButton}>
+        <Pressable style={styles.favoriteButton} onPress={toggleFavorite}>
           <Ionicons
             name={isFavorite ? "heart" : "heart-outline"}
             size={18}
@@ -158,12 +214,12 @@ function BookCard({
       {/* Book Info */}
       <View style={styles.bookInfo}>
         <Text style={styles.bookTitle} numberOfLines={2}>
-          {title}
+          {book.title}
         </Text>
         <Text style={styles.bookAuthor} numberOfLines={1}>
-          {author}
+          {book.author || 'Unknown Author'}
         </Text>
-        <Text style={styles.bookCategory}>{category}</Text>
+        <Text style={styles.bookCategory}>{book.category}</Text>
       </View>
     </Pressable>
   );
@@ -326,5 +382,47 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.primary,
     fontWeight: '600',
+  },
+  // Loading, Error, and Empty States
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing.xl * 2,
+    paddingHorizontal: layout.screenPadding,
+  },
+  loadingText: {
+    ...typography.body,
+    color: colors.text.secondary,
+    marginTop: spacing.md,
+  },
+  errorText: {
+    ...typography.body,
+    color: colors.error,
+    marginTop: spacing.md,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    ...typography.body,
+    color: colors.surface,
+    fontWeight: '600',
+  },
+  emptyText: {
+    ...typography.h3,
+    color: colors.text.secondary,
+    marginTop: spacing.md,
+  },
+  emptySubtext: {
+    ...typography.bodySmall,
+    color: colors.text.tertiary,
+    marginTop: spacing.xs,
+    textAlign: 'center',
   },
 });
