@@ -126,8 +126,8 @@ After running migrations, verify everything is set up correctly:
    - Open `C:\YA\.env` (create it if it doesn't exist)
    - Copy from `.env.example`:
      ```env
-     EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-     EXPO_PUBLIC_SUPABASE_ANON_KEY=your-actual-anon-key-here
+     EXPO_PUBLIC_SUPABASE_URL=https://ucgryycirirxjskfhqes.supabase.co
+     EXPO_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_neDPnfwnSqLUgaWEzJmsdw_zapWikHL
      EXPO_PUBLIC_ENV=development
      ```
    - Replace with your actual values
