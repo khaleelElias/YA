@@ -7,11 +7,13 @@ import {
   Pressable,
   ActivityIndicator,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BrowseStackScreenProps } from '@/navigation/types';
 import { colors, typography, spacing, layout, shadows } from '@/theme';
 import { fetchBookById, getBookCoverUrl } from '@/api/books';
+import { downloadBook, deleteBook, isBookDownloaded } from '@/services/downloads/downloadManager';
 import type { Book } from '@/types';
 
 type Props = BrowseStackScreenProps<'BookDetail'>;
@@ -26,9 +28,12 @@ export default function BookDetailScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     loadBook();
+    checkIfDownloaded();
   }, [bookId]);
 
   const loadBook = async () => {
@@ -52,19 +57,66 @@ export default function BookDetailScreen({ route, navigation }: Props) {
     }
   };
 
+  const checkIfDownloaded = async () => {
+    try {
+      const downloaded = await isBookDownloaded(bookId);
+      setIsDownloaded(downloaded);
+    } catch (error) {
+      console.error('Failed to check if book is downloaded:', error);
+    }
+  };
+
   const toggleFavorite = () => {
     setIsFavorite(!isFavorite);
     // TODO: Save to favorites
   };
 
-  const handleDownload = () => {
-    // TODO: Implement download
-    console.log('Download book:', book?.title);
+  const handleDownload = async () => {
+    if (!book) return;
+
+    if (isDownloaded) {
+      // Already downloaded - ask if they want to delete
+      Alert.alert(
+        'Delete Download',
+        'This book is already downloaded. Do you want to delete it?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await deleteBook(book.id);
+                setIsDownloaded(false);
+                Alert.alert('Success', 'Book deleted successfully');
+              } catch (error: any) {
+                Alert.alert('Error', error.message || 'Failed to delete book');
+              }
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+
+      // Download the book (returns local file URI)
+      await downloadBook(book);
+
+      setIsDownloaded(true);
+      Alert.alert('Success', 'Book downloaded successfully!');
+    } catch (error: any) {
+      Alert.alert('Download Failed', error.message || 'Failed to download book');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleRead = () => {
-    // TODO: Navigate to reader
-    console.log('Read book:', book?.title);
+    // Reader coming in Sprint 4
+    Alert.alert('Reader Coming Soon', 'The EPUB reader will be implemented in Sprint 4!');
   };
 
   if (loading) {
@@ -185,9 +237,31 @@ export default function BookDetailScreen({ route, navigation }: Props) {
 
       {/* Action Buttons */}
       <View style={styles.actionBar}>
-        <Pressable style={styles.downloadButton} onPress={handleDownload}>
-          <Ionicons name="download-outline" size={20} color={colors.surface} />
-          <Text style={styles.downloadButtonText}>Download</Text>
+        <Pressable
+          style={[
+            styles.downloadButton,
+            (isDownloading || isDownloaded) && styles.downloadButtonAlternate,
+          ]}
+          onPress={handleDownload}
+          disabled={isDownloading}
+        >
+          {isDownloading ? (
+            <>
+              <ActivityIndicator size="small" color={colors.surface} />
+              <Text style={styles.downloadButtonText}>Downloading...</Text>
+            </>
+          ) : (
+            <>
+              <Ionicons
+                name={isDownloaded ? 'checkmark-circle' : 'download-outline'}
+                size={20}
+                color={colors.surface}
+              />
+              <Text style={styles.downloadButtonText}>
+                {isDownloaded ? 'Downloaded' : 'Download'}
+              </Text>
+            </>
+          )}
         </Pressable>
 
         <Pressable style={styles.readButton} onPress={handleRead}>
@@ -399,6 +473,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.text.secondary,
     paddingVertical: spacing.md,
     borderRadius: 12,
+  },
+  downloadButtonAlternate: {
+    backgroundColor: '#10B981', // Green for downloaded state
   },
   downloadButtonText: {
     ...typography.body,
