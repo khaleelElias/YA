@@ -13,7 +13,7 @@
  */
 
 export const DATABASE_NAME = 'yazidi_library.db';
-export const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 2;
 
 /**
  * SQL statements to create all local tables
@@ -36,7 +36,8 @@ export const CREATE_TABLES = `
     age_range TEXT,
     content_type TEXT NOT NULL,
     cover_uri TEXT, -- Local file path
-    epub_uri TEXT, -- Local file path
+    epub_uri TEXT, -- Local file path (legacy, for EPUB files)
+    pdf_uri TEXT, -- Local file path (for PDF files)
     file_size_bytes INTEGER,
     page_count INTEGER,
     downloaded_at TEXT NOT NULL,
@@ -57,7 +58,9 @@ export const CREATE_TABLES = `
   CREATE TABLE IF NOT EXISTS local_reading_progress (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     book_id TEXT NOT NULL,
-    cfi TEXT, -- EPUB Canonical Fragment Identifier (primary position)
+    cfi TEXT, -- EPUB Canonical Fragment Identifier (for EPUB files)
+    current_page INTEGER, -- Current page number (for PDF files)
+    total_pages INTEGER, -- Total pages (for PDF files)
     chapter_id TEXT,
     section_id TEXT,
     scroll_position REAL,
@@ -139,10 +142,19 @@ export const DROP_TABLES = `
 
 /**
  * Migration function for future schema updates
+ *
+ * NOTE: Version 2 migration is handled specially in database/index.ts
+ * It checks if columns exist before adding them to prevent errors.
+ * This is necessary because CREATE_TABLES already includes these columns,
+ * but existing databases from v1 need them added.
  */
 export const migrations: Record<number, string> = {
   // Version 1 is the initial schema (CREATE_TABLES)
+
+  // Version 2: Add PDF support
+  // This is handled specially in runMigrations() to check column existence
+  2: `-- PDF support migration (handled in code)`,
+
   // Future versions go here:
-  // 2: 'ALTER TABLE ...',
   // 3: 'CREATE TABLE ...',
 };

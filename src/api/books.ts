@@ -281,6 +281,7 @@ export async function fetchCategories(): Promise<
  */
 export async function getBookFileUrl(filePath: string): Promise<string | null> {
   try {
+    // Using 'book-files' bucket as shown in Supabase Storage
     const { data } = supabase.storage.from('book-files').getPublicUrl(filePath);
     return data.publicUrl;
   } catch (error) {

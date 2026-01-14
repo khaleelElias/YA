@@ -6,6 +6,7 @@ import { colors, typography } from '@/theme';
 // Import screens
 import HomeScreen from '@/screens/home/HomeScreen';
 import BookDetailScreen from '@/screens/home/BookDetailScreen';
+import PDFReaderScreen from '@/screens/reader/PDFReaderScreen';
 
 const Stack = createStackNavigator<BrowseStackParamList>();
 
@@ -40,6 +41,13 @@ export default function BrowseStackNavigator() {
         options={{
           title: 'Book Details',
           headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="Reader"
+        component={PDFReaderScreen}
+        options={{
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

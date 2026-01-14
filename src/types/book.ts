@@ -8,7 +8,7 @@
 
 export type Language = 'ku' | 'ar' | 'en' | 'de';
 export type Script = 'latin' | 'arabic';
-export type ContentType = 'epub' | 'text';
+export type ContentType = 'epub' | 'pdf' | 'text';
 export type BookStatus = 'draft' | 'published' | 'hidden';
 
 export interface Book {
@@ -28,6 +28,7 @@ export interface Book {
   // Content Type
   content_type: ContentType;
   epub_file_path: string | null;
+  pdf_file_path: string | null;
   text_content: Record<string, any> | null; // JSONB for structured text/markdown
 
   // Categorization
@@ -130,7 +131,8 @@ export interface LocalBook {
   language: Language;
   category: string;
   cover_uri: string | null; // Local file path
-  epub_uri: string | null; // Local file path
+  epub_uri: string | null; // Local file path (for EPUB files)
+  pdf_uri: string | null; // Local file path (for PDF files)
   file_size_bytes: number;
   page_count: number | null; // INFORMATIONAL ONLY
   last_synced_at: string;
@@ -140,13 +142,15 @@ export interface LocalBook {
 /**
  * Local reading progress (SQLite)
  *
- * CRITICAL: progress_percent calculated from CFI, NOT pages
+ * CRITICAL: For EPUB, progress_percent calculated from CFI. For PDF, calculated from page numbers.
  */
 export interface LocalReadingProgress {
   book_id: string;
-  cfi: string | null; // Primary position marker
+  cfi: string | null; // Primary position marker (for EPUB files)
+  current_page: number | null; // Current page (for PDF files)
+  total_pages: number | null; // Total pages (for PDF files)
   chapter_id: string | null;
-  progress_percent: number; // Calculated from CFI
+  progress_percent: number; // Calculated from CFI (EPUB) or pages (PDF)
   last_read_at: string;
   synced_to_cloud: 0 | 1; // SQLite boolean
   user_id: string | null; // NULL for anonymous users

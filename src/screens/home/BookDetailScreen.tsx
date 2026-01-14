@@ -115,8 +115,13 @@ export default function BookDetailScreen({ route, navigation }: Props) {
   };
 
   const handleRead = () => {
-    // Reader coming in Sprint 4
-    Alert.alert('Reader Coming Soon', 'The EPUB reader will be implemented in Sprint 4!');
+    if (!isDownloaded) {
+      Alert.alert('Download Required', 'Please download this book first to read it offline.');
+      return;
+    }
+
+    // Navigate to PDF reader
+    navigation.navigate('Reader', { bookId: book!.id });
   };
 
   if (loading) {

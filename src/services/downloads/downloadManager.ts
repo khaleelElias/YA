@@ -1,10 +1,11 @@
 /**
  * Download Manager Service - MINIMAL IMPLEMENTATION
  *
- * Sprint 3 Goal: Download ONE EPUB file successfully
+ * Sprint 3-4 Goal: Download EPUB or PDF files successfully
  * - Uses modern Expo FileSystem API (SDK 52+)
  * - No pause/resume, no sync queue, no progress callbacks
  * - Simple validation and error handling
+ * - Supports both EPUB and PDF formats
  */
 
 import * as FileSystem from 'expo-file-system/legacy';
@@ -13,22 +14,34 @@ import { getBookFileUrl } from '@/api/books';
 import type { Book } from '@/types';
 
 /**
- * Download a single book EPUB file to local storage
+ * Download a single book file (EPUB or PDF) to local storage
  *
  * @param book - Book object from Supabase
- * @returns Local file URI of downloaded EPUB
- * @throws Error if epub_file_path is missing or download fails
+ * @returns Local file URI of downloaded file
+ * @throws Error if file path is missing or download fails
  */
 export async function downloadBook(book: Book): Promise<string> {
-  const { id: bookId } = book;
+  const { id: bookId, content_type } = book;
 
   try {
-    console.log(`[DownloadManager] Starting download for book: ${bookId}`);
+    console.log(`[DownloadManager] Starting download for book: ${bookId} (${content_type})`);
 
-    // Validate epub_file_path exists
-    if (!book.epub_file_path || book.epub_file_path.trim() === '') {
-      const errorMsg = 'This book does not have an EPUB file available for download';
-      console.error(`[DownloadManager] ${errorMsg}. book.epub_file_path:`, book.epub_file_path);
+    // Determine file path and extension based on content type
+    let filePath: string | null;
+    let fileExtension: string;
+
+    if (content_type === 'pdf') {
+      filePath = book.pdf_file_path;
+      fileExtension = 'pdf';
+    } else {
+      filePath = book.epub_file_path;
+      fileExtension = 'epub';
+    }
+
+    // Validate file path exists
+    if (!filePath || filePath.trim() === '') {
+      const errorMsg = `This book does not have a ${fileExtension.toUpperCase()} file available for download`;
+      console.error(`[DownloadManager] ${errorMsg}. file_path:`, filePath);
       throw new Error(errorMsg);
     }
 
@@ -47,18 +60,18 @@ export async function downloadBook(book: Book): Promise<string> {
     }
 
     // Get download URL from Supabase Storage
-    const epubUrl = await getBookFileUrl(book.epub_file_path);
-    console.log(`[DownloadManager] Resolved Supabase URL: ${epubUrl}`);
+    const fileUrl = await getBookFileUrl(filePath);
+    console.log(`[DownloadManager] Resolved Supabase URL: ${fileUrl}`);
 
-    if (!epubUrl) {
+    if (!fileUrl) {
       throw new Error('Failed to get download URL from Supabase Storage');
     }
 
-    // Download EPUB file
-    const destination = `${booksDir}${bookId}.epub`;
+    // Download file
+    const destination = `${booksDir}${bookId}.${fileExtension}`;
     console.log(`[DownloadManager] Downloading to: ${destination}`);
 
-    const downloadResult = await FileSystem.downloadAsync(epubUrl, destination);
+    const downloadResult = await FileSystem.downloadAsync(fileUrl, destination);
 
     if (!downloadResult || downloadResult.status !== 200) {
       throw new Error(`Download failed with status: ${downloadResult?.status || 'unknown'}`);
@@ -67,7 +80,7 @@ export async function downloadBook(book: Book): Promise<string> {
     console.log(`[DownloadManager] File downloaded successfully: ${downloadResult.uri}`);
 
     // Store book metadata in local database
-    await saveBookToDatabase(book, downloadResult.uri);
+    await saveBookToDatabase(book, downloadResult.uri, fileExtension);
 
     console.log(`[DownloadManager] Book downloaded and saved: ${bookId}`);
     return downloadResult.uri;
@@ -97,15 +110,18 @@ export async function isBookDownloaded(bookId: string): Promise<boolean> {
 /**
  * Save book metadata to local database
  */
-async function saveBookToDatabase(book: Book, epubUri: string): Promise<void> {
+async function saveBookToDatabase(book: Book, fileUri: string, fileType: string): Promise<void> {
   const db = await database.getDatabase();
+
+  const epubUri = fileType === 'epub' ? fileUri : null;
+  const pdfUri = fileType === 'pdf' ? fileUri : null;
 
   await db.runAsync(
     `INSERT INTO local_books (
       id, title, author, translator, description, language, script, category,
-      tags, age_range, content_type, epub_uri, file_size_bytes,
+      tags, age_range, content_type, epub_uri, pdf_uri, file_size_bytes,
       page_count, downloaded_at, metadata_json, user_id
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       book.id,
       book.title,
@@ -119,6 +135,7 @@ async function saveBookToDatabase(book: Book, epubUri: string): Promise<void> {
       book.age_range || null,
       book.content_type,
       epubUri,
+      pdfUri,
       book.file_size_bytes || null,
       book.page_count || null,
       new Date().toISOString(),
@@ -139,8 +156,8 @@ export async function deleteBook(bookId: string): Promise<void> {
 
     // Get book info from database
     const db = await database.getDatabase();
-    const book = await db.getFirstAsync<{ epub_uri: string | null }>(
-      'SELECT epub_uri FROM local_books WHERE id = ?',
+    const book = await db.getFirstAsync<{ epub_uri: string | null; pdf_uri: string | null }>(
+      'SELECT epub_uri, pdf_uri FROM local_books WHERE id = ?',
       [bookId]
     );
 
@@ -148,9 +165,14 @@ export async function deleteBook(bookId: string): Promise<void> {
       throw new Error('Book not found in local database');
     }
 
-    // Delete EPUB file
+    // Delete EPUB file if exists
     if (book.epub_uri) {
       await FileSystem.deleteAsync(book.epub_uri, { idempotent: true });
+    }
+
+    // Delete PDF file if exists
+    if (book.pdf_uri) {
+      await FileSystem.deleteAsync(book.pdf_uri, { idempotent: true });
     }
 
     // Delete from database

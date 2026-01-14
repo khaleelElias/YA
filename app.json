@@ -3,12 +3,19 @@
     "name": "Yazidi Library",
     "slug": "yazidi-library",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "scheme": "yazidilibrary",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "plugins": [
+      "@config-plugins/react-native-pdf",
+      "@config-plugins/react-native-blob-util"
+    ],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -16,11 +23,14 @@
     },
     "ios": {
       "supportsTablet": true,
+      "requireFullScreen": false,
       "bundleIdentifier": "com.yazidilibrary.app",
       "infoPlist": {
         "CFBundleDevelopmentRegion": "en",
         "NSCameraUsageDescription": "This app does not use the camera.",
-        "NSPhotoLibraryUsageDescription": "This app does not access your photo library."
+        "NSPhotoLibraryUsageDescription": "This app does not access your photo library.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIRequiresFullScreen": false
       }
     },
     "android": {
@@ -41,8 +51,12 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-project-id-here"
+        "projectId": "bd5c875a-a6be-4052-8d21-c696407e031d"
       }
-    }
+    },
+    "owner": "khaleelkhairi",
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ]
   }
 }

@@ -1,13 +1,14 @@
 # Development Progress
 
-Last Updated: January 12, 2026
+Last Updated: January 13, 2026
 
-## Current Status: Sprint 2 Complete ✅
+## Current Status: Sprint 4 Complete ✅
 
 ### Latest Session Summary
 
-**Session Date:** January 12, 2026
-**Sprint:** Sprint 2 - Real Data Integration Complete!
+**Session Date:** January 14, 2026
+**Sprint:** Sprint 4 - PDF Reader Implementation Complete!
+**Note:** Switched from EPUB to PDF format. PDF reader fully implemented and working.
 
 ---
 
@@ -180,31 +181,136 @@ Last Updated: January 12, 2026
 - ✅ **Responsive UI** - Proper loading indicators and transitions
 - ✅ **No TypeScript errors** - Clean build with `npx tsc --noEmit`
 
+### Sprint 3: Downloads & Offline Storage (COMPLETE)
+
+#### Download Manager Implementation
+- ✅ **Download service** - `src/services/downloads/downloadManager.ts`
+- ✅ **SQLite database** - Local storage for books and reading progress
+- ✅ **Database schema** - `src/services/database/schema.ts`
+- ✅ **File system integration** - expo-file-system for downloads
+- ✅ **Download progress tracking** - Real-time download status
+
+#### Features Implemented
+- ✅ **Download books** - Download PDF/EPUB files from Supabase Storage
+- ✅ **Check download status** - Track which books are downloaded
+- ✅ **Delete downloads** - Remove downloaded books
+- ✅ **Local book metadata** - Store book info in SQLite
+- ✅ **Reading progress** - Track reading position
+- ✅ **Offline-first** - Works without internet connection
+
+### Sprint 4: PDF Reader (COMPLETE)
+
+#### PDF Reader Implementation
+- ✅ **PDFReaderScreen** - `src/screens/reader/PDFReaderScreen.tsx`
+- ✅ **react-native-pdf integration** - Native PDF rendering (PDFKit on iOS, PdfRenderer on Android)
+- ✅ **Expo config plugins** - @config-plugins/react-native-pdf and @config-plugins/react-native-blob-util
+- ✅ **Page-based progress tracking** - current_page and total_pages
+- ✅ **Database migration system** - Version 2 migration with automatic migrations
+
+#### Features Implemented
+- ✅ **PDF viewing** - Smooth native PDF rendering with swipe navigation
+- ✅ **Progress persistence** - Auto-save reading position every 1 second (debounced)
+- ✅ **Resume reading** - Opens to last read page
+- ✅ **Page indicator** - Shows current page and total pages
+- ✅ **Memory optimization** - Fixed crash issue with proper state management using refs
+- ✅ **Error handling** - Graceful error states for missing files or load failures
+
+#### Technical Details
+- ✅ **Database Schema v2** - Added pdf_uri, current_page, total_pages columns
+- ✅ **Migration System** - Automatic version detection and migration application
+- ✅ **Ref-based state** - Used refs to prevent excessive re-renders and crashes
+- ✅ **Debounced auto-save** - 1-second delay before saving to reduce database writes
+- ✅ **Initial page control** - Proper separation between initial page load and page changes
+
+#### Bug Fixes
+- ✅ **Fixed PDF re-rendering loop** - Changed from controlled to uncontrolled page prop
+- ✅ **Fixed memory crashes** - Used refs instead of state for page tracking in callbacks
+- ✅ **Fixed progress save timing** - Separated cleanup and debounced auto-save effects
+- ✅ **Fixed emulator database migration error** - Added column existence checks before ALTER TABLE
+
+#### Documentation
+- ✅ **PDF_SETUP_GUIDE.md** - Complete setup guide for Supabase PDF storage
+- ✅ **TROUBLESHOOTING_PDF_DOWNLOAD.md** - Common issues and solutions
+- ✅ **EMULATOR_DATABASE_FIX.md** - Fix for emulator database migration errors
+- ✅ **PDF_CRASH_FIX.md** - Detailed explanation of crash fix with refs
+- ✅ **Migration files** - 004_add_pdf_support.sql with clear instructions
+
+#### UI Integration
+- ✅ **Download button** - BookDetailScreen.tsx updated
+- ✅ **Download state** - Shows downloading/downloaded status
+- ✅ **Read Now button** - Opens reader when book is downloaded
+- ✅ **Delete confirmation** - Alert before deleting downloads
+
+### Sprint 4: PDF Reader (COMPLETE)
+
+#### PDF Reader Implementation
+- ✅ **react-native-pdf** - Native PDF viewer with Expo config plugins
+- ✅ **PDFReaderScreen.tsx** - Main PDF reader screen
+- ✅ **Native rendering** - PDFKit (iOS), PdfRenderer (Android)
+- ✅ **Expo config plugins** - Custom development client support
+
+#### Reading Position Tracking (Page-Based)
+- ✅ **Page save/restore** - Track current page number
+- ✅ **SQLite integration** - Queries `local_books` and `local_reading_progress`
+- ✅ **Automatic progress save** - Updates on page turn
+- ✅ **Progress restore on reopen** - Resumes from last page
+- ✅ **Save on unmount** - Ensures progress saved when leaving reader
+- ✅ **Anonymous user support** - `user_id` NULL in database
+
+#### Reader Features
+- ✅ **Page navigation** - Swipe/tap left/right to turn pages
+- ✅ **Page indicator** - Shows "Page X of Y"
+- ✅ **Loading states** - Spinner while loading PDF
+- ✅ **Error handling** - Graceful error messages
+- ✅ **Custom header** - Back button and book title
+- ✅ **File URI handling** - Handles `file://` protocol
+- ✅ **Fit to width** - Optimal reading experience
+
+#### Database Schema Updates (v2)
+- ✅ **pdf_uri column** - Added to `local_books` table
+- ✅ **current_page column** - Added to `local_reading_progress` table
+- ✅ **total_pages column** - Added to `local_reading_progress` table
+- ✅ **Migration system** - Automatic database migrations
+
+#### Type System Updates
+- ✅ **'pdf' content type** - Added to `ContentType` union
+- ✅ **pdf_file_path** - Added to `Book` interface
+- ✅ **Page tracking types** - Added to progress interfaces
+
+#### Navigation Integration
+- ✅ **Reader screen added** - `BrowseStackNavigator.tsx` updated
+- ✅ **Navigation from BookDetail** - "Read Now" button opens PDF reader
+- ✅ **Download check** - Requires book to be downloaded first
+
+#### Technical Implementation
+- ✅ **Native PDF libraries** - Platform-specific rendering
+- ✅ **Progress percentage** - Calculated from page numbers
+- ✅ **Offline-first** - No cloud sync (Sprint 5)
+- ✅ **Cross-platform** - Works on iOS and Android
+
+#### Documentation
+- ✅ **SPRINT_4_IMPLEMENTATION.md** - Comprehensive implementation guide
+- ✅ **Architecture diagrams** - Data flow documentation
+- ✅ **Testing instructions** - Step-by-step test guide
+- ✅ **Troubleshooting guide** - Common issues and solutions
+
 ---
 
 ## 🚧 In Progress
 
-**Nothing currently in progress** - Sprint 2 completed successfully!
+**Nothing currently in progress** - Sprint 4 completed successfully!
 
 ---
 
-## 📋 Next Steps (Sprint 3 Priorities)
+## 📋 Next Steps
 
-### 1. Downloads & Offline Storage
-- [ ] Set up Expo FileSystem for downloads
-- [ ] Set up SQLite for local book storage
-- [ ] Implement download functionality
-- [ ] Store books locally
-- [ ] Show download progress
-- [ ] Manage downloaded books in Library
-- [ ] Delete downloads functionality
-
-### 5. Reading Progress Tracking
-- [ ] Set up local storage for anonymous users
-- [ ] Track reading progress (CFI-based, NOT page numbers)
-- [ ] Show "Continue Reading" on book cards
-- [ ] Update progress in Library screen
-- [ ] Sync to Supabase when user logs in
+### Sprint 5 (Authentication & Sync) - Next Priority
+- [ ] User authentication (login/signup)
+- [ ] Sync reading progress to Supabase
+- [ ] Sync bookmarks to Supabase
+- [ ] Migrate anonymous data on login
+- [ ] Cross-device sync
+- [ ] Favorites sync
 
 ---
 
@@ -225,6 +331,8 @@ YA/
 │   │   ├── home/
 │   │   │   ├── HomeScreen.tsx        ✅ Browse screen with real data
 │   │   │   └── BookDetailScreen.tsx  ✅ Book detail screen
+│   │   ├── reader/
+│   │   │   └── PDFReaderScreen.tsx   ✅ PDF reader screen
 │   │   ├── downloads/
 │   │   │   └── DownloadsScreen.tsx   ✅ Library screen
 │   │   ├── profile/
@@ -245,8 +353,13 @@ YA/
 │   │   ├── user.ts              ✅ User types
 │   │   ├── reading.ts           ✅ Reading types
 │   │   └── index.ts             ✅ Type exports
+│   ├── services/
+│   │   ├── database/
+│   │   │   ├── index.ts              ✅ SQLite service
+│   │   │   └── schema.ts             ✅ Local database schema
+│   │   └── downloads/
+│   │       └── downloadManager.ts    ✅ Download service
 │   ├── components/              ⏳ To be created
-│   ├── services/                ⏳ To be created
 │   ├── store/                   ⏳ To be created
 │   └── utils/                   ⏳ To be created
 ├── supabase/
@@ -255,11 +368,12 @@ YA/
 │   ├── seed_test_books.sql      ✅ 14 test books with translations
 │   └── verify_setup.sql         ✅ Database verification script
 ├── docs/
-│   ├── TECHNICAL_PLAN.md        ✅ Full technical plan
-│   ├── SUPABASE_SETUP.md        ✅ Supabase setup guide
-│   ├── SETUP.md                 ✅ Dev setup guide
-│   ├── TESTING_GUIDE.md         ✅ Comprehensive testing guide
-│   └── PROGRESS.md              ✅ This file
+│   ├── TECHNICAL_PLAN.md             ✅ Full technical plan
+│   ├── SUPABASE_SETUP.md             ✅ Supabase setup guide
+│   ├── SETUP.md                      ✅ Dev setup guide
+│   ├── TESTING_GUIDE.md              ✅ Comprehensive testing guide
+│   ├── SPRINT_4_IMPLEMENTATION.md    ✅ Sprint 4 PDF reader guide
+│   └── PROGRESS.md                   ✅ This file
 ├── QUICK_START.md               ✅ 5-minute quick start
 ├── App.tsx                      ✅ Updated to use navigation
 ├── app.json                     ✅ Expo config
@@ -272,7 +386,7 @@ YA/
 ## 🎯 Critical Implementation Notes
 
 ### DO NOT FORGET
-1. **EPUB pages are virtual** - Progress MUST use CFI, NOT page numbers
+1. **PDF format** - We're using PDF instead of EPUB for books
 2. **Anonymous/guest reading required** - No forced login
 3. **RTL is first-class** - Test continuously, not as final sprint
 4. **No gamification in v1** - Keep scope tight
@@ -285,6 +399,7 @@ YA/
   - `001_initial_schema.sql`
   - `002_rls_policies.sql`
   - `003_storage_setup.sql`
+  - `004_add_pdf_support.sql` ✨ NEW - for PDF support
 
 ### Design Guidelines
 - **Primary color**: #D4A574 (warm gold/amber)
@@ -307,36 +422,50 @@ YA/
    - Run `supabase/migrations/001_initial_schema.sql`
    - Run `supabase/migrations/002_rls_policies.sql`
    - Run `supabase/migrations/003_storage_setup.sql`
+   - **Run `supabase/migrations/004_add_pdf_support.sql`** ✨ NEW
 
-2. **Add test books**:
-   - Run `supabase/quick_test_books.sql` (adds 5 books)
+2. **Set up PDF books** ✨ NEW (required for Sprint 4):
+   - **See `docs/PDF_SETUP_GUIDE.md` for complete instructions**
+   - Upload PDF files to Supabase Storage (`books/pdfs/` folder)
+   - Update `supabase/seed_test_pdf_books.sql` with your file paths
+   - Run the SQL to create PDF book records
 
-3. **Verify .env has complete anon key**:
+3. **Add test EPUB books** (optional):
+   - Run `supabase/quick_test_books.sql` (adds 5 EPUB books)
+
+4. **Verify .env has complete anon key**:
    - Get from Supabase → Settings → API
    - Update `.env` if needed
 
-4. **Restart app**:
+5. **Build with native modules** (required for PDF reader):
    ```bash
-   npm start -- --clear
+   npx expo prebuild
+   npx expo run:ios    # or npx expo run:android
    ```
 
-5. **Test the app**:
-   - See books on Browse screen
-   - Try category filtering
-   - Try search
-   - Tap a book to see details
+6. **Test the app**:
+   - See books on Browse screen (PDF and EPUB)
+   - Download a PDF book
+   - Tap "Read Now" to open PDF reader
+   - Test page navigation
 
 ### If You Already Set Up:
 
-1. **Start the app**:
+1. **Build with native modules** (required for PDF reader):
    ```bash
-   npm start
+   npx expo prebuild
+   npx expo run:ios    # or npx expo run:android
    ```
 
-2. **Priority for next sprint**: Downloads & Offline Storage
-   - Set up Expo FileSystem
-   - Set up SQLite for local storage
-   - Implement download functionality
+2. **Test the PDF reader** (Sprint 4):
+   - Download a PDF book from Browse screen
+   - Tap "Read Now" to open PDF reader
+   - Test page navigation (swipe left/right)
+   - Close and reopen to verify position restored
+   - Check SQLite: `SELECT * FROM local_reading_progress`
+
+3. **Next priorities**:
+   - Sprint 5: Authentication and sync to Supabase
 
 ---
 
@@ -347,9 +476,9 @@ YA/
 | Sprint 0: Foundation | ✅ Complete | 100% |
 | Sprint 1: Navigation & UI | ✅ Complete | 100% |
 | Sprint 2: Real Data Integration | ✅ Complete | 100% |
-| Sprint 3: Downloads & Offline | 🔜 Next | 0% |
-| Sprint 4: Reader & Progress | ⏳ Planned | 0% |
-| Sprint 5: Authentication | ⏳ Planned | 0% |
+| Sprint 3: Downloads & Offline | ✅ Complete | 100% |
+| Sprint 4: PDF Reader | ✅ Complete | 100% |
+| Sprint 5: Authentication | 🔜 Next | 0% |
 
 ---
 
@@ -390,6 +519,10 @@ YA/
 - ✅ Connected to Supabase with real data
 - ✅ Browse, search, and filter books from database
 - ✅ Navigation between browse and detail screens
+- ✅ Downloads & offline storage working (Sprint 3)
+- ✅ **PDF reader working** (Sprint 4)
+- ✅ **Page-based reading progress** (Sprint 4)
+- ✅ **Native PDF rendering** (react-native-pdf)
 - ✅ Loading, error, and empty states implemented
 - ✅ Icons are professional (Ionicons only)
 - ✅ Design matches 2024-2025 modern standards
@@ -399,14 +532,22 @@ YA/
 - ✅ Test data scripts ready
 - ✅ Comprehensive testing documentation
 
-**Current State**: Sprint 2 Complete - Real data integration working!
+**Current State**: Sprint 4 Complete - PDF reader with page tracking working!
 
-**Before Testing**:
-1. Run database migrations in Supabase
-2. Add test books with `quick_test_books.sql`
-3. Verify `.env` has complete anon key
-4. See `QUICK_START.md` for detailed steps
+**Testing the PDF Reader**:
+1. Build with native modules: `npx expo prebuild && npx expo run:ios`
+2. Download a PDF book from Browse screen
+3. Tap "Read Now" to open PDF reader
+4. Test page navigation (swipe/tap)
+5. Close and reopen to verify position restored
+6. Query SQLite: `SELECT * FROM local_reading_progress`
+
+**Important Architecture Note**:
+- ✅ Uses react-native-pdf (native libraries)
+- ✅ Requires custom development client (not Expo Go)
+- ✅ Page-based position tracking (NOT CFI)
+- ✅ Native rendering: PDFKit (iOS), PdfRenderer (Android)
 
 ---
 
-**Next session focus**: Downloads & Offline Storage (Sprint 3) 📥
+**Next session focus**: Sprint 5 - Authentication and Sync to Supabase 🚀
