@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { BrowseStackScreenProps } from '@/navigation/types';
 import { colors, typography, spacing, layout, shadows } from '@/theme';
@@ -34,7 +35,7 @@ export default function HomeScreen({ navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       {/* Search Bar */}
       <View style={styles.searchSection}>
         <View style={styles.searchBar}>
@@ -144,7 +145,7 @@ export default function HomeScreen({ navigation }: Props) {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
   searchSection: {
     backgroundColor: colors.surface,
     paddingHorizontal: layout.screenPadding,
-    paddingTop: spacing.sm,
+    paddingTop: Platform.OS === 'ios' ? spacing.md : spacing.lg,
     paddingBottom: spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,

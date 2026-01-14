@@ -4,7 +4,15 @@
       "Bash(npx create-expo-app@latest . --template blank-typescript)",
       "Bash(npm install:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm start:*)",
+      "Bash(timeout 10 tail:*)",
+      "Bash(findstr:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm ls:*)",
+      "Bash(npx expo start:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
